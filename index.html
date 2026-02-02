@@ -242,29 +242,31 @@
 
         .results-grid { 
             display: grid; 
-            grid-template-columns: 1fr; 
-            gap: 20px; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 15px; 
             margin-bottom: 30px; 
         }
         
         .result-card { 
-            background: var(--beige-claro); 
-            padding: 25px 20px; 
-            border-radius: 10px; 
+            background: linear-gradient(135deg, var(--beige-claro) 0%, var(--beige) 100%);
+            padding: 15px 18px; 
+            border-radius: 8px; 
             border: 2px solid var(--beige-oscuro); 
-            text-align: center; 
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(45, 45, 45, 0.08);
         }
         
         .result-label { 
-            font-size: 0.75rem; 
-            color: var(--plomo); 
+            font-size: 0.7rem; 
+            color: var(--plomo-oscuro); 
             text-transform: uppercase; 
-            margin-bottom: 10px; 
-            font-weight: 700; 
+            margin-bottom: 6px; 
+            font-weight: 700;
+            letter-spacing: 0.5px;
         }
         
         .result-value { 
-            font-size: 2rem; 
+            font-size: 1.3rem; 
             font-weight: 700; 
             font-family: 'Roboto Mono'; 
             color: var(--negro); 
@@ -306,6 +308,14 @@
             .results-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
+
+            .result-card {
+                padding: 16px 20px;
+            }
+
+            .result-value {
+                font-size: 1.4rem;
+            }
             
             .btn-toolbar {
                 grid-template-columns: repeat(2, 1fr);
@@ -340,9 +350,17 @@
             }
             
             .results-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 25px;
-                margin-bottom: 40px;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 15px;
+                margin-bottom: 25px;
+            }
+
+            .result-card {
+                padding: 16px 20px;
+            }
+
+            .result-value {
+                font-size: 1.4rem;
             }
 
             .btn-toolbar {
@@ -402,11 +420,16 @@
             
             .results-grid {
                 grid-template-columns: repeat(4, 1fr);
-                margin-bottom: 50px;
+                margin-bottom: 30px;
+                gap: 18px;
+            }
+
+            .result-card {
+                padding: 18px 22px;
             }
             
             .result-value {
-                font-size: 2.4rem;
+                font-size: 1.5rem;
             }
             
             .btn-toolbar {
@@ -556,7 +579,15 @@
             }
             
             .result-value {
-                font-size: 1.6rem;
+                font-size: 1.1rem;
+            }
+
+            .result-card {
+                padding: 12px 15px;
+            }
+
+            .result-label {
+                font-size: 0.65rem;
             }
             
             th {
