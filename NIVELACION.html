@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Nivelación Topográfica - Ingeniería</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0/dist/chartjs-plugin-annotation.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --negro: #2d2d2d;
+            --plomo-oscuro: #4a4a4a;
+            --plomo: #6b6b6b;
+            --plomo-claro: #9a9a9a;
+            --beige-oscuro: #d4c5b9;
+            --beige: #e8dfd6;
+            --beige-claro: #f5f0eb;
+            --blanco: #ffffff;
+            --sombra-fuerte: 0 8px 24px rgba(45, 45, 45, 0.16);
+        }
+
+        body { 
+            font-family: 'Crimson Pro', serif;
+            background: linear-gradient(135deg, var(--beige-claro) 0%, var(--beige) 100%);
+            min-height: 100vh;
+            color: var(--negro);
+            padding: 40px 20px;
+            line-height: 1.7;
+        }
+
+        .container { 
+            max-width: 1600px;
+            margin: auto;
+            background: var(--blanco);
+            padding: 60px;
+            border-radius: 12px;
+            box-shadow: var(--sombra-fuerte);
+            border: 1px solid var(--beige-oscuro);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding: 40px 30px;
+            background: linear-gradient(135deg, var(--beige-claro) 0%, var(--beige) 100%);
+            border-radius: 8px;
+            border-left: 6px solid var(--negro);
+        }
+
+        .header h1 { font-size: 3rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; }
+
+        .project-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 50px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: var(--beige-claro);
+            padding: 25px;
+            border-radius: 8px;
+            border: 2px solid var(--beige-oscuro);
+        }
+
+        .input-group label { font-weight: 600; text-transform: uppercase; font-size: 0.85rem; color: var(--plomo-oscuro); }
+
+        .input-group input {
+            background: var(--blanco);
+            border: 2px solid var(--beige-oscuro);
+            padding: 16px 20px;
+            font-family: 'Roboto Mono', monospace;
+            border-radius: 6px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            margin-bottom: 40px;
+            border-radius: 8px;
+            border: 2px solid var(--beige-oscuro);
+        }
+
+        table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        thead { background: var(--negro); }
+        th { color: var(--beige-claro); padding: 18px; text-transform: uppercase; font-size: 0.7rem; text-align: center; letter-spacing: 1px; }
+        td { border: 1px solid var(--beige-oscuro); padding: 12px; text-align: center; }
+
+        .station-cell { font-weight: 700; background: var(--beige) !important; font-family: 'Roboto Mono'; }
+        input.point-input, input.table-input { width: 100%; border: 1px solid var(--beige-oscuro); padding: 8px; text-align: center; font-family: 'Roboto Mono'; border-radius: 4px; }
+        .calculated-cell { font-weight: 600; background: var(--beige-claro) !important; font-family: 'Roboto Mono'; }
+
+        .btn-toolbar { display: flex; gap: 15px; margin-bottom: 50px; flex-wrap: wrap; }
+        .btn { padding: 18px 40px; border: 2px solid var(--negro); cursor: pointer; font-weight: 600; text-transform: uppercase; background: var(--blanco); border-radius: 6px; transition: 0.3s; }
+        .btn:hover { background: var(--beige-claro); transform: translateY(-2px); }
+        .btn-add { background: var(--negro); color: var(--beige-claro); }
+
+        .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px; margin-bottom: 50px; }
+        .result-card { background: var(--beige-claro); padding: 30px; border-radius: 10px; border: 2px solid var(--beige-oscuro); text-align: center; }
+        .result-label { font-size: 0.8rem; color: var(--plomo); text-transform: uppercase; margin-bottom: 10px; font-weight: 700; }
+        .result-value { font-size: 2.4rem; font-weight: 700; font-family: 'Roboto Mono'; color: var(--negro); }
+
+        #chart-container { background: var(--blanco); padding: 45px; border-radius: 10px; border: 2px solid var(--beige-oscuro); margin-top: 50px; }
+        .suma-row { background: var(--negro) !important; color: white !important; }
+        
+        @media print { .no-print { display: none !important; } }
+    </style>
+</head>
+<body>
+
+<div class="container" id="printable-area">
+    <div class="header">
+        <h1>Sistema de Nivelación Topográfica</h1>
+        <p class="subtitle">Perfil Longitudinal con Distancias Horizontales Escalables</p>
+    </div>
+
+    <div class="project-section">
+        <div class="input-group">
+            <label>Proyecto</label>
+            <input type="text" id="proyecto" placeholder="Ej: Drenaje Casco Viejo Oruro">
+        </div>
+        <div class="input-group">
+            <label>Responsable Técnico</label>
+            <input type="text" id="responsable" placeholder="Nombre del responsable">
+        </div>
+        <div class="input-group">
+            <label>Cota Inicial (BM)</label>
+            <input type="number" id="cotaInicial" step="0.001" placeholder="Ej: 3700.500">
+        </div>
+        <div class="input-group">
+            <label>Fecha</label>
+            <div class="info-display" id="current-date" style="background: var(--negro); color: white; padding: 15px; border-radius: 6px; text-align: center; font-family: 'Roboto Mono';"></div>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <table id="tablaNivel">
+            <thead>
+                <tr>
+                    <th>Est.</th>
+                    <th>Punto Visado</th>
+                    <th>Dist. entre Puntos (m)</th>
+                    <th>V. Atrás (+)</th>
+                    <th>V. Adelante (-)</th>
+                    <th>Plano Visual</th>
+                    <th>ΔH</th>
+                    <th>Cota</th>
+                    <th class="no-print">Acción</th>
+                </tr>
+            </thead>
+            <tbody id="cuerpoTabla"></tbody>
+            <tfoot id="tablaFooter" style="display: none;">
+                <tr class="suma-row">
+                    <td colspan="2" style="text-align: left; padding-left: 25px;">TOTALES</td>
+                    <td id="totalDist">0.00</td>
+                    <td id="sumaVA">0.000</td>
+                    <td id="sumaVD">0.000</td>
+                    <td></td>
+                    <td id="sumaDH" style="color: #00ff88;">0.000</td>
+                    <td></td>
+                    <td class="no-print"></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <div class="btn-toolbar no-print">
+        <button class="btn btn-add" onclick="agregarEstacion()">+ Estación</button>
+        <button class="btn" onclick="calcular()">Calcular y Graficar</button>
+        <button class="btn" onclick="exportarPDF()">Exportar PDF</button>
+        <button class="btn" onclick="limpiarTabla()">Limpiar Todo</button>
+    </div>
+
+    <div id="results-container" style="display: none;">
+        <h2 style="margin-bottom: 25px; text-transform: uppercase; letter-spacing: 2px; border-bottom: 2px solid var(--negro); padding-bottom: 10px;">Resumen de Control</h2>
+        <div class="results-grid">
+            <div class="result-card"><div class="result-label">Distancia Total</div><div id="resDist" class="result-value">0.00</div></div>
+            <div class="result-card"><div class="result-label">Desnivel Total</div><div id="resDesn" class="result-value">0.000</div></div>
+            <div class="result-card"><div class="result-label">Cota Final</div><div id="resCotaF" class="result-value">0.000</div></div>
+            <div class="result-card"><div class="result-label">Error Cierre</div><div id="resError" class="result-value">0.000</div></div>
+        </div>
+    </div>
+
+    <div id="chart-container" style="display: none;">
+        <h2 style="text-align: center; margin-bottom: 20px; text-transform: uppercase;">Perfil Longitudinal (Escala Horizontal Real)</h2>
+        <canvas id="perfilChart"></canvas>
+    </div>
+</div>
+
+<script>
+    let chart;
+    let estacionCounter = 1;
+
+    function actualizarFecha() {
+        const opciones = { year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('current-date').innerText = new Date().toLocaleDateString('es-ES', opciones);
+    }
+
+    window.onload = () => { actualizarFecha(); agregarEstacion(); };
+
+    function agregarEstacion() {
+        const tbody = document.getElementById('cuerpoTabla');
+        const numEst = estacionCounter;
+        const tr1 = document.createElement('tr');
+        tr1.innerHTML = `
+            <td rowspan="2" class="station-cell">E${numEst}</td>
+            <td><input type="text" class="point-input pv-name" placeholder="Ej: BM-1"></td>
+            <td rowspan="2"><input type="number" class="table-input dist-val" step="0.01" placeholder="Distancia (m)"></td>
+            <td><input type="number" class="table-input va" step="0.001" placeholder="0.000"></td>
+            <td style="background:var(--beige-claro)"></td>
+            <td class="calculated-cell pv">-</td>
+            <td class="calculated-cell dh">-</td>
+            <td class="calculated-cell cota-val">-</td>
+            <td rowspan="2" class="no-print"><button class="btn" style="padding: 10px; font-size: 0.7rem;" onclick="this.closest('tr').nextElementSibling.remove(); this.closest('tr').remove();">X</button></td>
+        `;
+        const tr2 = document.createElement('tr');
+        tr2.innerHTML = `
+            <td><input type="text" class="point-input pv-name" placeholder="Ej: P-1"></td>
+            <td style="background:var(--beige-claro)"></td>
+            <td><input type="number" class="table-input vd" step="0.001" placeholder="0.000"></td>
+            <td style="background:var(--beige-claro)"></td>
+            <td style="background:var(--beige-claro)"></td>
+            <td class="calculated-cell cota-val">-</td>
+        `;
+        tbody.appendChild(tr1);
+        tbody.appendChild(tr2);
+        estacionCounter++;
+    }
+
+    function limpiarTabla() { if(confirm('¿Borrar todos los datos?')) { location.reload(); } }
+
+    function calcular() {
+        const cotaInicial = parseFloat(document.getElementById('cotaInicial').value);
+        if (isNaN(cotaInicial)) return alert("Debe ingresar la Cota Inicial (BM) para comenzar los cálculos.");
+
+        const filas = document.getElementById('cuerpoTabla').querySelectorAll('tr');
+        let cotaActual = cotaInicial;
+        let sumaVA = 0, sumaVD = 0, distAcumulada = 0;
+        
+        let chartData = []; 
+        let estAnnotations = []; 
+
+        for (let i = 0; i < filas.length; i += 2) {
+            const f1 = filas[i], f2 = filas[i+1];
+            const dist = parseFloat(f1.querySelector('.dist-val').value) || 0;
+            const va = parseFloat(f1.querySelector('.va').value) || 0;
+            const vd = parseFloat(f2.querySelector('.vd').value) || 0;
+            const p1Name = f1.querySelector('.pv-name').value || `P${i}`;
+            const p2Name = f2.querySelector('.pv-name').value || `P${i+1}`;
+            const estName = f1.querySelector('.station-cell').innerText;
+
+            sumaVA += va; sumaVD += vd;
+
+            if (i === 0) {
+                f1.querySelector('.cota-val').innerText = cotaInicial.toFixed(3);
+                chartData.push({ x: 0, y: cotaInicial, label: p1Name });
+            }
+
+            let pv = cotaActual + va;
+            let dh = va - vd;
+            let cotaSig = pv - vd;
+
+            f1.querySelector('.pv').innerText = pv.toFixed(3);
+            f1.querySelector('.dh').innerText = dh.toFixed(3);
+            f2.querySelector('.cota-val').innerText = cotaSig.toFixed(3);
+
+            let posEstacion = distAcumulada + (dist / 2);
+            estAnnotations.push({ name: estName, x: posEstacion });
+
+            distAcumulada += dist;
+            chartData.push({ x: distAcumulada, y: cotaSig, label: p2Name });
+
+            cotaActual = cotaSig;
+        }
+
+        document.getElementById('totalDist').innerText = distAcumulada.toFixed(2);
+        document.getElementById('sumaVA').innerText = sumaVA.toFixed(3);
+        document.getElementById('sumaVD').innerText = sumaVD.toFixed(3);
+        document.getElementById('sumaDH').innerText = (sumaVA - sumaVD).toFixed(3);
+        document.getElementById('tablaFooter').style.display = 'table-footer-group';
+
+        document.getElementById('results-container').style.display = 'block';
+        document.getElementById('resDist').innerText = distAcumulada.toFixed(2);
+        document.getElementById('resDesn').innerText = (sumaVA - sumaVD).toFixed(3);
+        document.getElementById('resCotaF').innerText = cotaActual.toFixed(3);
+        document.getElementById('resError').innerText = Math.abs((sumaVA - sumaVD) - (cotaActual - cotaInicial)).toFixed(4);
+
+        generarGrafico(chartData, estAnnotations);
+    }
+
+    function generarGrafico(chartData, estAnnotations) {
+        const ctx = document.getElementById('perfilChart').getContext('2d');
+        if (chart) chart.destroy();
+        document.getElementById('chart-container').style.display = 'block';
+
+        const annotations = {};
+        estAnnotations.forEach((est, i) => {
+            annotations['line' + i] = {
+                type: 'line',
+                xMin: est.x, xMax: est.x,
+                borderColor: '#ffadad', // ROJO PASTEL
+                borderWidth: 2,
+                borderDash: [6, 6],
+                label: {
+                    display: true,
+                    content: est.name,
+                    backgroundColor: 'rgba(255, 173, 173, 0.9)',
+                    color: '#2d2d2d',
+                    font: { size: 10, weight: 'bold' },
+                    position: 'start'
+                }
+            };
+        });
+
+        chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: 'Perfil del Terreno (m)',
+                    data: chartData,
+                    borderColor: '#2d2d2d',
+                    backgroundColor: 'rgba(212, 197, 185, 0.6)',
+                    fill: true,
+                    tension: 0.2,
+                    pointRadius: 6,
+                    pointBackgroundColor: '#2d2d2d'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    annotation: { annotations: annotations },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => `Cota: ${ctx.raw.y.toFixed(3)} m (Progresiva: ${ctx.raw.x.toFixed(2)} m)`,
+                            title: (ctx) => `Punto: ${ctx[0].raw.label}`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'linear',
+                        title: { display: true, text: 'Progresiva / Distancia Horizontal (m)', font: { weight: 'bold' } },
+                        ticks: {
+                            callback: function(value) {
+                                // Buscamos si hay un punto visado en esta coordenada exacta
+                                const point = chartData.find(p => Math.abs(p.x - value) < 0.01);
+                                if (point) {
+                                    // Devolvemos el nombre del punto + la distancia
+                                    return `${point.label} (${value.toFixed(1)}m)`;
+                                }
+                                return value + 'm';
+                            },
+                            autoSkip: false,
+                            maxRotation: 45,
+                            minRotation: 45
+                        },
+                        // Forzamos a que aparezcan los ticks de los puntos visados
+                        afterBuildTicks: axis => axis.ticks = chartData.map(v => ({ value: v.x }))
+                    },
+                    y: {
+                        title: { display: true, text: 'Elevación (msnm)', font: { weight: 'bold' } },
+                        ticks: { callback: v => v.toFixed(2) }
+                    }
+                }
+            }
+        });
+    }
+
+    async function exportarPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const canvas = await html2canvas(document.getElementById('printable-area'), { scale: 2 });
+        const imgWidth = 190, imgHeight = (canvas.height * imgWidth) / canvas.width;
+        doc.addImage(canvas.toDataURL('image/png'), 'PNG', 10, 10, imgWidth, imgHeight);
+        doc.save('Nivelacion_JohnLeonardo.pdf');
+    }
+</script>
+
+</body>
+</html>
