@@ -8,6 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0/dist/chartjs-plugin-annotation.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     
@@ -123,7 +124,7 @@
             width: 100%; 
             border-collapse: separate; 
             border-spacing: 0;
-            min-width: 900px;
+            min-width: 1100px;
         }
         
         thead { background: var(--negro); }
@@ -631,6 +632,8 @@
                 <tr>
                     <th>Est.</th>
                     <th>Punto Visado</th>
+                    <th>Coord. X (m)</th>
+                    <th>Coord. Y (m)</th>
                     <th>Dist. entre Puntos (m)</th>
                     <th>V. Atrás (+)</th>
                     <th>V. Adelante (-)</th>
@@ -644,6 +647,7 @@
             <tfoot id="tablaFooter" style="display: none;">
                 <tr class="suma-row">
                     <td colspan="2" style="text-align: left; padding-left: 15px;">TOTALES</td>
+                    <td colspan="2"></td>
                     <td id="totalDist">0.00</td>
                     <td id="sumaVA">0.000</td>
                     <td id="sumaVD">0.000</td>
@@ -700,6 +704,8 @@
         tr1.innerHTML = `
             <td rowspan="2" class="station-cell">E${numEst}</td>
             <td><input type="text" class="point-input pv-name" placeholder="Ej: BM-1"></td>
+            <td><input type="number" class="table-input coord-x" step="0.001" placeholder="X"></td>
+            <td><input type="number" class="table-input coord-y" step="0.001" placeholder="Y"></td>
             <td rowspan="2"><input type="number" class="table-input dist-val" step="0.01" placeholder="Distancia (m)"></td>
             <td><input type="number" class="table-input va" step="0.001" placeholder="0.000"></td>
             <td style="background:var(--beige-claro)"></td>
@@ -711,6 +717,8 @@
         const tr2 = document.createElement('tr');
         tr2.innerHTML = `
             <td><input type="text" class="point-input pv-name" placeholder="Ej: P-1"></td>
+            <td><input type="number" class="table-input coord-x" step="0.001" placeholder="X"></td>
+            <td><input type="number" class="table-input coord-y" step="0.001" placeholder="Y"></td>
             <td style="background:var(--beige-claro)"></td>
             <td><input type="number" class="table-input vd" step="0.001" placeholder="0.000"></td>
             <td style="background:var(--beige-claro)"></td>
@@ -907,10 +915,168 @@
 
     async function exportarPDF() {
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('p', 'mm', 'a4');
-        const canvas = await html2canvas(document.getElementById('printable-area'), { scale: 2 });
-        const imgWidth = 190, imgHeight = (canvas.height * imgWidth) / canvas.width;
-        doc.addImage(canvas.toDataURL('image/png'), 'PNG', 10, 10, imgWidth, imgHeight);
+        
+        // Crear PDF en formato carta (letter)
+        const doc = new jsPDF('landscape', 'mm', 'letter'); // 279mm x 216mm
+        
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const margin = 8;
+        
+        // Título
+        doc.setFontSize(16);
+        doc.setFont(undefined, 'bold');
+        doc.text('SISTEMA DE NIVELACIÓN TOPOGRÁFICA', pageWidth / 2, 12, { align: 'center' });
+        
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'normal');
+        doc.text('Perfil Longitudinal con Distancias Horizontales Escalables', pageWidth / 2, 18, { align: 'center' });
+        
+        doc.setFontSize(8);
+        doc.setFont(undefined, 'bold');
+        doc.text('ELABORADO POR: JOHN LEONARDO CABRERA ESPINDOLA', pageWidth / 2, 23, { align: 'center' });
+        
+        // Información del proyecto
+        const proyecto = document.getElementById('proyecto').value || 'N/A';
+        const responsable = document.getElementById('responsable').value || 'N/A';
+        const cotaInicial = document.getElementById('cotaInicial').value || 'N/A';
+        const fecha = document.getElementById('current-date').innerText;
+        
+        doc.setFontSize(8);
+        doc.setFont(undefined, 'normal');
+        let yPos = 30;
+        doc.text(`Proyecto: ${proyecto}`, margin, yPos);
+        doc.text(`Responsable: ${responsable}`, margin + 90, yPos);
+        yPos += 5;
+        doc.text(`Cota Inicial (BM): ${cotaInicial} m`, margin, yPos);
+        doc.text(`Fecha: ${fecha}`, margin + 90, yPos);
+        
+        // Preparar datos de la tabla
+        yPos += 8;
+        const filas = document.getElementById('cuerpoTabla').querySelectorAll('tr');
+        const tableData = [];
+        
+        for (let i = 0; i < filas.length; i += 2) {
+            const f1 = filas[i];
+            const f2 = filas[i + 1];
+            
+            const estacion = f1.querySelector('.station-cell').innerText;
+            const p1Name = f1.querySelector('.pv-name').value || '-';
+            const p2Name = f2.querySelector('.pv-name').value || '-';
+            
+            const p1CoordX = f1.querySelectorAll('.coord-x')[0].value || '-';
+            const p1CoordY = f1.querySelectorAll('.coord-y')[0].value || '-';
+            const p2CoordX = f2.querySelectorAll('.coord-x')[0].value || '-';
+            const p2CoordY = f2.querySelectorAll('.coord-y')[0].value || '-';
+            
+            const dist = f1.querySelector('.dist-val').value || '-';
+            const va = f1.querySelector('.va').value || '-';
+            const vd = f2.querySelector('.vd').value || '-';
+            const pv = f1.querySelector('.pv').innerText;
+            const dh = f1.querySelector('.dh').innerText;
+            const cota1 = f1.querySelectorAll('.cota-val')[0].innerText;
+            const cota2 = f2.querySelector('.cota-val').innerText;
+            
+            tableData.push([estacion, p1Name, p1CoordX, p1CoordY, dist, va, '', pv, dh, cota1]);
+            tableData.push(['', p2Name, p2CoordX, p2CoordY, '', '', vd, '', '', cota2]);
+        }
+        
+        // Totales
+        const totalDist = document.getElementById('totalDist').innerText;
+        const sumaVA = document.getElementById('sumaVA').innerText;
+        const sumaVD = document.getElementById('sumaVD').innerText;
+        const sumaDH = document.getElementById('sumaDH').innerText;
+        
+        tableData.push(['TOTALES', '', '', '', totalDist, sumaVA, sumaVD, '', sumaDH, '']);
+        
+        // Dibujar tabla
+        doc.autoTable({
+            startY: yPos,
+            head: [['Est.', 'Punto', 'X (m)', 'Y (m)', 'Dist.(m)', 'V.Atrás', 'V.Adel.', 'P.Visual', 'ΔH', 'Cota']],
+            body: tableData,
+            theme: 'grid',
+            styles: { 
+                fontSize: 6,
+                cellPadding: 1.5,
+                lineColor: [180, 180, 180],
+                lineWidth: 0.1
+            },
+            headStyles: { 
+                fillColor: [45, 45, 45],
+                textColor: [245, 240, 235],
+                fontStyle: 'bold',
+                fontSize: 6,
+                halign: 'center'
+            },
+            columnStyles: {
+                0: { cellWidth: 12, halign: 'center', fontStyle: 'bold' },
+                1: { cellWidth: 22, halign: 'left' },
+                2: { cellWidth: 18, halign: 'center', fontSize: 5.5 },
+                3: { cellWidth: 18, halign: 'center', fontSize: 5.5 },
+                4: { cellWidth: 16, halign: 'center' },
+                5: { cellWidth: 16, halign: 'center' },
+                6: { cellWidth: 16, halign: 'center' },
+                7: { cellWidth: 18, halign: 'center' },
+                8: { cellWidth: 15, halign: 'center' },
+                9: { cellWidth: 18, halign: 'center' }
+            },
+            didParseCell: function(data) {
+                // Resaltar fila de totales
+                if (data.row.index === tableData.length - 1) {
+                    data.cell.styles.fillColor = [45, 45, 45];
+                    data.cell.styles.textColor = [255, 255, 255];
+                    data.cell.styles.fontStyle = 'bold';
+                }
+                // Estaciones
+                if (data.column.index === 0 && data.cell.text[0] && data.cell.text[0].startsWith('E')) {
+                    data.cell.styles.fillColor = [232, 223, 214];
+                }
+                // Calculados
+                if ([7, 8, 9].includes(data.column.index) && data.row.index < tableData.length - 1) {
+                    data.cell.styles.fillColor = [245, 240, 235];
+                }
+            },
+            margin: { left: margin, right: margin }
+        });
+        
+        // Resultados compactos
+        const finalY = doc.lastAutoTable.finalY + 5;
+        
+        const resDist = document.getElementById('resDist').innerText;
+        const resDesn = document.getElementById('resDesn').innerText;
+        const resCotaF = document.getElementById('resCotaF').innerText;
+        const resError = document.getElementById('resError').innerText;
+        
+        doc.setFillColor(245, 240, 235);
+        doc.rect(margin, finalY, 65, 15, 'F');
+        doc.rect(margin + 68, finalY, 65, 15, 'F');
+        doc.rect(margin + 136, finalY, 65, 15, 'F');
+        doc.rect(margin + 204, finalY, 65, 15, 'F');
+        
+        doc.setFontSize(7);
+        doc.setFont(undefined, 'bold');
+        doc.text('DISTANCIA TOTAL', margin + 32.5, finalY + 4, { align: 'center' });
+        doc.text('DESNIVEL ACUMULADO', margin + 100.5, finalY + 4, { align: 'center' });
+        doc.text('COTA FINAL', margin + 168.5, finalY + 4, { align: 'center' });
+        doc.text('ERROR DE CIERRE', margin + 236.5, finalY + 4, { align: 'center' });
+        
+        doc.setFontSize(10);
+        doc.text(`${resDist} m`, margin + 32.5, finalY + 11, { align: 'center' });
+        doc.text(`${resDesn} m`, margin + 100.5, finalY + 11, { align: 'center' });
+        doc.text(`${resCotaF} m`, margin + 168.5, finalY + 11, { align: 'center' });
+        doc.text(`${resError} m`, margin + 236.5, finalY + 11, { align: 'center' });
+        
+        // Gráfico si existe
+        const chartCanvas = document.getElementById('perfilChart');
+        if (chartCanvas && chart) {
+            const chartY = finalY + 18;
+            const chartHeight = pageHeight - chartY - margin - 3;
+            const chartWidth = pageWidth - (2 * margin);
+            
+            const chartImg = chartCanvas.toDataURL('image/png');
+            doc.addImage(chartImg, 'PNG', margin, chartY, chartWidth, chartHeight);
+        }
+        
         doc.save('Nivelacion_JohnLeonardo.pdf');
     }
 
