@@ -9,7 +9,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0/dist/chartjs-plugin-annotation.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     
     <style>
@@ -53,6 +52,7 @@
             background: linear-gradient(135deg, var(--beige-claro) 0%, var(--beige) 100%);
             border-radius: 8px;
             border-left: 6px solid var(--negro);
+            position: relative;
         }
 
         .header h1 { 
@@ -70,13 +70,38 @@
         }
 
         .elaborado-por {
-            font-size: 0.85rem;
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            font-size: 0.55rem;
             color: var(--negro);
             font-weight: 600;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 2px solid var(--beige-oscuro);
+            text-align: right;
+            line-height: 1.3;
+            background: rgba(255, 255, 255, 0.75);
+            padding: 5px 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(212, 197, 185, 0.5);
+            box-shadow: 0 2px 6px rgba(45, 45, 45, 0.12);
+            backdrop-filter: blur(5px);
+            z-index: 10;
+        }
+
+        .elaborado-por .label {
+            font-size: 0.5rem;
+            color: var(--plomo);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .elaborado-por .nombre {
+            font-size: 0.55rem;
             font-family: 'Roboto Mono', monospace;
+            font-weight: 700;
+            color: var(--negro);
+            line-height: 1.2;
         }
 
         .project-section {
@@ -124,7 +149,7 @@
             width: 100%; 
             border-collapse: separate; 
             border-spacing: 0;
-            min-width: 1100px;
+            min-width: 1200px;
         }
         
         thead { background: var(--negro); }
@@ -273,18 +298,34 @@
             color: var(--negro); 
         }
 
-        #chart-container { 
+        .charts-wrapper {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .chart-container { 
             background: var(--blanco); 
             padding: 20px 15px; 
             border-radius: 10px; 
             border: 2px solid var(--beige-oscuro); 
-            margin-top: 30px;
             position: relative;
             height: auto;
             min-height: 400px;
         }
 
-        #perfilChart {
+        .chart-title {
+            text-align: center;
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--negro);
+            margin-bottom: 15px;
+            letter-spacing: 0.5px;
+        }
+
+        .chart-container canvas {
             max-height: 450px;
         }
         
@@ -292,9 +333,62 @@
         
         @media print { .no-print { display: none !important; } }
 
+        /* RESPONSIVE ELABORADO POR */
+        @media (min-width: 576px) {
+            .elaborado-por {
+                font-size: 0.58rem;
+                padding: 5px 9px;
+            }
+
+            .elaborado-por .label {
+                font-size: 0.52rem;
+            }
+
+            .elaborado-por .nombre {
+                font-size: 0.58rem;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .elaborado-por {
+                font-size: 0.62rem;
+                padding: 6px 10px;
+                top: 10px;
+                right: 15px;
+            }
+
+            .elaborado-por .label {
+                font-size: 0.56rem;
+            }
+
+            .elaborado-por .nombre {
+                font-size: 0.62rem;
+            }
+
+            .charts-wrapper {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (min-width: 992px) {
+            .elaborado-por {
+                font-size: 0.65rem;
+                padding: 7px 11px;
+                top: 12px;
+                right: 18px;
+            }
+
+            .elaborado-por .label {
+                font-size: 0.58rem;
+            }
+
+            .elaborado-por .nombre {
+                font-size: 0.65rem;
+            }
+        }
+
         /* RESPONSIVE BREAKPOINTS */
         
-        /* Tablets pequeñas y móviles grandes (landscape) */
         @media (min-width: 576px) {
             body { padding: 25px 15px; }
             
@@ -328,7 +422,6 @@
             }
         }
 
-        /* Tablets */
         @media (min-width: 768px) {
             body { padding: 30px 20px; }
             
@@ -379,12 +472,12 @@
                 font-size: 2.2rem;
             }
             
-            #chart-container {
+            .chart-container {
                 padding: 35px 25px;
                 min-height: 450px;
             }
 
-            #perfilChart {
+            .chart-container canvas {
                 max-height: 500px;
             }
             
@@ -398,7 +491,6 @@
             }
         }
 
-        /* Desktop */
         @media (min-width: 992px) {
             body { padding: 40px 20px; }
             
@@ -444,126 +536,17 @@
                 font-size: 0.9rem;
             }
             
-            #chart-container {
+            .chart-container {
                 padding: 45px;
                 margin-top: 50px;
                 min-height: 500px;
             }
 
-            #perfilChart {
+            .chart-container canvas {
                 max-height: 550px;
             }
         }
 
-        /* Tablets */
-        @media (min-width: 768px) {
-            body { padding: 30px 20px; }
-            
-            .container { padding: 50px 40px; }
-            
-            .header {
-                padding: 35px 25px;
-                margin-bottom: 40px;
-            }
-            
-            .header h1 { 
-                font-size: 2.6rem;
-                letter-spacing: 1.5px;
-            }
-            
-            .project-section {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 25px;
-                margin-bottom: 40px;
-            }
-            
-            .input-group {
-                padding: 25px;
-            }
-            
-            .results-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 25px;
-                margin-bottom: 40px;
-            }
-            
-            .result-value {
-                font-size: 2.2rem;
-            }
-            
-            #chart-container {
-                padding: 35px 25px;
-                min-height: 450px;
-            }
-
-            #perfilChart {
-                max-height: 500px;
-            }
-            
-            th {
-                font-size: 0.7rem;
-                padding: 16px 10px;
-            }
-            
-            td {
-                padding: 12px 8px;
-            }
-        }
-
-        /* Desktop */
-        @media (min-width: 992px) {
-            body { padding: 40px 20px; }
-            
-            .container { padding: 60px; }
-            
-            .header {
-                padding: 40px 30px;
-                margin-bottom: 50px;
-            }
-            
-            .header h1 { 
-                font-size: 3rem;
-                letter-spacing: 2px;
-            }
-            
-            .project-section {
-                grid-template-columns: repeat(4, 1fr);
-                margin-bottom: 50px;
-            }
-            
-            .results-grid {
-                grid-template-columns: repeat(4, 1fr);
-                margin-bottom: 50px;
-            }
-            
-            .result-value {
-                font-size: 2.4rem;
-            }
-            
-            .btn-toolbar {
-                justify-content: flex-start;
-                gap: 15px;
-                margin-bottom: 50px;
-            }
-            
-            .btn {
-                padding: 18px 40px;
-                font-size: 0.9rem;
-                min-width: auto;
-            }
-            
-            #chart-container {
-                padding: 45px;
-                margin-top: 50px;
-                min-height: 500px;
-            }
-
-            #perfilChart {
-                max-height: 550px;
-            }
-        }
-
-        /* Móviles muy pequeños */
         @media (max-width: 375px) {
             .header h1 {
                 font-size: 1.5rem;
@@ -602,9 +585,12 @@
 
 <div class="container" id="printable-area">
     <div class="header">
+        <div class="elaborado-por">
+            <span class="label">Elaborado por:</span>
+            <span class="nombre">JOHN LEONARDO<br>CABRERA ESPINDOLA</span>
+        </div>
         <h1>Sistema de Nivelación Topográfica</h1>
         <p class="subtitle">Perfil Longitudinal con Distancias Horizontales Escalables</p>
-        <p class="elaborado-por">ELABORADO POR: JOHN LEONARDO CABRERA ESPINDOLA</p>
     </div>
 
     <div class="project-section">
@@ -639,6 +625,7 @@
                     <th>V. Adelante (-)</th>
                     <th>Plano Visual</th>
                     <th>ΔH</th>
+                    <th>Pendiente (%)</th>
                     <th>Cota</th>
                     <th class="no-print">Acción</th>
                 </tr>
@@ -653,6 +640,7 @@
                     <td id="sumaVD">0.000</td>
                     <td></td>
                     <td id="sumaDH" style="color: #00ff88;">0.000</td>
+                    <td id="pendPromedio" style="color: #00ff88;">0.00</td>
                     <td></td>
                     <td class="no-print"></td>
                 </tr>
@@ -686,8 +674,15 @@
         </div>
     </div>
 
-    <div id="chart-container" style="display: none;">
-        <canvas id="perfilChart"></canvas>
+    <div class="charts-wrapper" id="charts-wrapper" style="display: none;">
+        <div class="chart-container">
+            <div class="chart-title">Perfil Longitudinal del Terreno</div>
+            <canvas id="perfilChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <div class="chart-title">Análisis de Pendientes por Estación</div>
+            <canvas id="pendientesChart"></canvas>
+        </div>
     </div>
 </div>
 
@@ -695,7 +690,8 @@
     document.getElementById('current-date').innerText = new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
 
     let estacionCounter = 1;
-    let chart = null;
+    let perfilChart = null;
+    let pendientesChart = null;
 
     function agregarEstacion() {
         const tbody = document.getElementById('cuerpoTabla');
@@ -711,6 +707,7 @@
             <td style="background:var(--beige-claro)"></td>
             <td class="calculated-cell pv">-</td>
             <td class="calculated-cell dh">-</td>
+            <td rowspan="2" class="calculated-cell pendiente-val">-</td>
             <td class="calculated-cell cota-val">-</td>
             <td rowspan="2" class="no-print"><button class="btn" style="padding: 10px; font-size: 0.7rem;" onclick="this.closest('tr').nextElementSibling.remove(); this.closest('tr').remove();">X</button></td>
         `;
@@ -733,15 +730,36 @@
     function limpiarTabla() { if(confirm('¿Borrar todos los datos?')) { location.reload(); } }
 
     function calcular() {
-        const cotaInicial = parseFloat(document.getElementById('cotaInicial').value);
-        if (isNaN(cotaInicial)) return alert("Debe ingresar la Cota Inicial (BM) para comenzar los cálculos.");
+        const cotaInicialInput = document.getElementById('cotaInicial').value;
+        
+        if (!cotaInicialInput || cotaInicialInput.trim() === '') {
+            alert('⚠️ CAMPO REQUERIDO\n\nPor favor, ingrese la Cota Inicial (BM) antes de calcular.\n\nEste valor es fundamental para realizar los cálculos topográficos.');
+            document.getElementById('cotaInicial').focus();
+            return;
+        }
+        
+        const cotaInicial = parseFloat(cotaInicialInput);
+        if (isNaN(cotaInicial)) {
+            alert('⚠️ VALOR INVÁLIDO\n\nLa Cota Inicial debe ser un número válido.\n\nEjemplo: 3700.500');
+            document.getElementById('cotaInicial').focus();
+            return;
+        }
 
         const filas = document.getElementById('cuerpoTabla').querySelectorAll('tr');
+        
+        if (filas.length === 0) {
+            alert('⚠️ NO HAY DATOS\n\nDebe agregar al menos una estación antes de calcular.\n\nPresione el botón "+ Nueva Estación" para comenzar.');
+            return;
+        }
+        
         let cotaActual = cotaInicial;
         let sumaVA = 0, sumaVD = 0, distAcumulada = 0;
+        let sumaPendientes = 0, numEstaciones = 0;
         
         let chartData = []; 
         let estAnnotations = []; 
+        let pendientesData = [];
+        let estacionesLabels = [];
 
         for (let i = 0; i < filas.length; i += 2) {
             const f1 = filas[i], f2 = filas[i+1];
@@ -763,8 +781,18 @@
             let dh = va - vd;
             let cotaSig = pv - vd;
 
+            let pendiente = 0;
+            if (dist > 0) {
+                pendiente = (dh / dist) * 100;
+                sumaPendientes += pendiente;
+                numEstaciones++;
+                pendientesData.push(pendiente);
+                estacionesLabels.push(estName);
+            }
+
             f1.querySelector('.pv').innerText = pv.toFixed(3);
             f1.querySelector('.dh').innerText = dh.toFixed(3);
+            f1.querySelector('.pendiente-val').innerText = dist > 0 ? pendiente.toFixed(2) + '%' : 'N/A';
             f2.querySelector('.cota-val').innerText = cotaSig.toFixed(3);
 
             let posEstacion = distAcumulada + (dist / 2);
@@ -776,25 +804,34 @@
             cotaActual = cotaSig;
         }
 
+        const pendientePromedio = numEstaciones > 0 ? (sumaPendientes / numEstaciones) : 0;
+
         document.getElementById('totalDist').innerText = distAcumulada.toFixed(2);
         document.getElementById('sumaVA').innerText = sumaVA.toFixed(3);
         document.getElementById('sumaVD').innerText = sumaVD.toFixed(3);
         document.getElementById('sumaDH').innerText = (sumaVA - sumaVD).toFixed(3);
+        document.getElementById('pendPromedio').innerText = pendientePromedio.toFixed(2) + '%';
         document.getElementById('tablaFooter').style.display = 'table-footer-group';
 
-        document.getElementById('results-container').style.display = 'block';
-        document.getElementById('resDist').innerText = distAcumulada.toFixed(2);
-        document.getElementById('resDesn').innerText = (sumaVA - sumaVD).toFixed(3);
-        document.getElementById('resCotaF').innerText = cotaActual.toFixed(3);
-        document.getElementById('resError').innerText = Math.abs((sumaVA - sumaVD) - (cotaActual - cotaInicial)).toFixed(4);
+        document.getElementById('results-container').style.display = 'grid';
+        document.getElementById('resDist').innerText = distAcumulada.toFixed(2) + ' m';
+        document.getElementById('resDesn').innerText = (sumaVA - sumaVD).toFixed(3) + ' m';
+        document.getElementById('resCotaF').innerText = cotaActual.toFixed(3) + ' m';
+        document.getElementById('resError').innerText = Math.abs((sumaVA - sumaVD) - (cotaActual - cotaInicial)).toFixed(4) + ' m';
 
-        generarGrafico(chartData, estAnnotations);
+        generarGraficos(chartData, estAnnotations, pendientesData, estacionesLabels, pendientePromedio);
     }
 
-    function generarGrafico(chartData, estAnnotations) {
+    function generarGraficos(chartData, estAnnotations, pendientesData, estacionesLabels, pendientePromedio) {
+        document.getElementById('charts-wrapper').style.display = 'grid';
+        
+        generarGraficoPerfil(chartData, estAnnotations);
+        generarGraficoPendientes(pendientesData, estacionesLabels, pendientePromedio);
+    }
+
+    function generarGraficoPerfil(chartData, estAnnotations) {
         const ctx = document.getElementById('perfilChart').getContext('2d');
-        if (chart) chart.destroy();
-        document.getElementById('chart-container').style.display = 'block';
+        if (perfilChart) perfilChart.destroy();
 
         const annotations = {};
         estAnnotations.forEach((est, i) => {
@@ -815,10 +852,9 @@
             };
         });
 
-        // Detectar si estamos en móvil
         const isMobile = window.innerWidth < 768;
 
-        chart = new Chart(ctx, {
+        perfilChart = new Chart(ctx, {
             type: 'line',
             data: {
                 datasets: [{
@@ -835,7 +871,7 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: true,
-                aspectRatio: isMobile ? 1.2 : 2,
+                aspectRatio: isMobile ? 1.2 : 2.2,
                 plugins: {
                     annotation: { annotations: annotations },
                     tooltip: {
@@ -867,14 +903,11 @@
                         },
                         ticks: {
                             callback: function(value) {
-                                // Buscar punto en esta coordenada
                                 const point = chartData.find(p => Math.abs(p.x - value) < 0.01);
                                 if (point) {
-                                    // En móvil, formato compacto
                                     if (isMobile) {
                                         return `${point.label}\n${value.toFixed(0)}m`;
                                     }
-                                    // En desktop, formato completo
                                     return `${point.label} (${value.toFixed(1)}m)`;
                                 }
                                 return value.toFixed(0) + 'm';
@@ -887,7 +920,6 @@
                             },
                             padding: isMobile ? 4 : 8
                         },
-                        // Forzar ticks en los puntos visados
                         afterBuildTicks: axis => {
                             axis.ticks = chartData.map(v => ({ value: v.x }));
                         }
@@ -913,47 +945,204 @@
         });
     }
 
+    function generarGraficoPendientes(pendientesData, estacionesLabels, pendientePromedio) {
+        const ctx = document.getElementById('pendientesChart').getContext('2d');
+        if (pendientesChart) pendientesChart.destroy();
+
+        const isMobile = window.innerWidth < 768;
+
+        pendientesChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: estacionesLabels,
+                datasets: [{
+                    label: 'Pendiente por Estación (%)',
+                    data: pendientesData,
+                    backgroundColor: pendientesData.map(p => 
+                        p > 0 ? 'rgba(107, 107, 107, 0.7)' : 'rgba(212, 197, 185, 0.7)'
+                    ),
+                    borderColor: '#2d2d2d',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: isMobile ? 1.2 : 2.2,
+                plugins: {
+                    legend: { 
+                        display: true, 
+                        position: isMobile ? 'bottom' : 'top',
+                        labels: {
+                            font: { size: isMobile ? 10 : 12 },
+                            padding: isMobile ? 10 : 15
+                        }
+                    },
+                    annotation: {
+                        annotations: {
+                            promedio: {
+                                type: 'line',
+                                yMin: pendientePromedio,
+                                yMax: pendientePromedio,
+                                borderColor: '#ff6b6b',
+                                borderWidth: 2,
+                                borderDash: [5, 5],
+                                label: {
+                                    display: true,
+                                    content: `Promedio: ${pendientePromedio.toFixed(2)}%`,
+                                    position: 'end',
+                                    backgroundColor: 'rgba(255, 107, 107, 0.9)',
+                                    color: '#fff',
+                                    font: { size: isMobile ? 9 : 11, weight: 'bold' }
+                                }
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        title: { 
+                            display: true, 
+                            text: 'Pendiente (%)', 
+                            font: { 
+                                weight: 'bold',
+                                size: isMobile ? 11 : 13
+                            } 
+                        },
+                        ticks: { 
+                            callback: v => v.toFixed(2) + '%',
+                            font: {
+                                size: isMobile ? 9 : 11
+                            }
+                        }
+                    },
+                    x: {
+                        title: { 
+                            display: true, 
+                            text: 'Estaciones', 
+                            font: { 
+                                weight: 'bold',
+                                size: isMobile ? 11 : 13
+                            } 
+                        },
+                        ticks: {
+                            font: {
+                                size: isMobile ? 9 : 11
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
     async function exportarPDF() {
         const { jsPDF } = window.jspdf;
         
-        // Crear PDF en formato carta (letter)
-        const doc = new jsPDF('landscape', 'mm', 'letter'); // 279mm x 216mm
+        const filas = document.getElementById('cuerpoTabla').querySelectorAll('tr');
+        if (filas.length === 0) {
+            alert('⚠️ No hay estaciones agregadas. Por favor agregue datos antes de exportar.');
+            return;
+        }
+        
+        const totalDist = document.getElementById('totalDist').innerText;
+        if (totalDist === '0.00') {
+            alert('⚠️ Debe calcular los datos antes de exportar el PDF. Presione el botón "Calcular" primero.');
+            return;
+        }
+        
+        const doc = new jsPDF('portrait', 'mm', 'letter');
         
         const pageWidth = doc.internal.pageSize.getWidth();
         const pageHeight = doc.internal.pageSize.getHeight();
-        const margin = 8;
+        const margin = 12;
+        const usableWidth = pageWidth - (2 * margin);
         
-        // Título
+        // BORDE DE PÁGINA
+        doc.setDrawColor(180, 180, 180);
+        doc.setLineWidth(0.3);
+        doc.setLineDash([3, 2]);
+        doc.rect(5, 5, pageWidth - 10, pageHeight - 10);
+        doc.setLineDash([]);
+        
+        let yPos = margin + 2;
+        
+        // ENCABEZADO
         doc.setFontSize(16);
         doc.setFont(undefined, 'bold');
-        doc.text('SISTEMA DE NIVELACIÓN TOPOGRÁFICA', pageWidth / 2, 12, { align: 'center' });
+        doc.text('SISTEMA DE NIVELACIÓN TOPOGRÁFICA', pageWidth / 2, yPos, { align: 'center' });
+        yPos += 7;
         
         doc.setFontSize(10);
         doc.setFont(undefined, 'normal');
-        doc.text('Perfil Longitudinal con Distancias Horizontales Escalables', pageWidth / 2, 18, { align: 'center' });
+        doc.text('Perfil Longitudinal con Distancias Horizontales Escalables', pageWidth / 2, yPos, { align: 'center' });
+        yPos += 10;
         
-        doc.setFontSize(8);
+        // Elaborado por con transparencia
+        doc.setFontSize(7.5);
         doc.setFont(undefined, 'bold');
-        doc.text('ELABORADO POR: JOHN LEONARDO CABRERA ESPINDOLA', pageWidth / 2, 23, { align: 'center' });
+        const elaboradoText = 'ELABORADO POR:';
+        const nombreText = 'JOHN LEONARDO';
+        const nombreText2 = 'CABRERA ESPINDOLA';
+        const elaboradoWidth = doc.getTextWidth(elaboradoText);
+        const nombreWidth = Math.max(doc.getTextWidth(nombreText), doc.getTextWidth(nombreText2));
+        const maxWidth = Math.max(elaboradoWidth, nombreWidth);
         
-        // Información del proyecto
+        doc.setFillColor(255, 255, 255);
+        doc.setGState(new doc.GState({opacity: 0.75}));
+        doc.rect(pageWidth - margin - maxWidth - 5, 10, maxWidth + 5, 13, 'F');
+        doc.setGState(new doc.GState({opacity: 1.0}));
+        
+        doc.setDrawColor(212, 197, 185);
+        doc.setLineWidth(0.4);
+        doc.rect(pageWidth - margin - maxWidth - 5, 10, maxWidth + 5, 13, 'S');
+        
+        doc.setTextColor(107, 107, 107);
+        doc.text(elaboradoText, pageWidth - margin - maxWidth / 2 - 2.5, 14, { align: 'center' });
+        doc.setFontSize(7);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(45, 45, 45);
+        doc.text(nombreText, pageWidth - margin - maxWidth / 2 - 2.5, 18, { align: 'center' });
+        doc.text(nombreText2, pageWidth - margin - maxWidth / 2 - 2.5, 21.5, { align: 'center' });
+        
+        doc.setTextColor(0, 0, 0);
+        
+        // INFORMACIÓN DEL PROYECTO
         const proyecto = document.getElementById('proyecto').value || 'N/A';
         const responsable = document.getElementById('responsable').value || 'N/A';
         const cotaInicial = document.getElementById('cotaInicial').value || 'N/A';
         const fecha = document.getElementById('current-date').innerText;
         
-        doc.setFontSize(8);
-        doc.setFont(undefined, 'normal');
-        let yPos = 30;
-        doc.text(`Proyecto: ${proyecto}`, margin, yPos);
-        doc.text(`Responsable: ${responsable}`, margin + 90, yPos);
-        yPos += 5;
-        doc.text(`Cota Inicial (BM): ${cotaInicial} m`, margin, yPos);
-        doc.text(`Fecha: ${fecha}`, margin + 90, yPos);
+        doc.setFillColor(232, 223, 214);
+        doc.rect(margin, yPos, usableWidth, 22, 'F');
+        doc.setDrawColor(45, 45, 45);
+        doc.setLineWidth(0.5);
+        doc.rect(margin, yPos, usableWidth, 22, 'S');
         
-        // Preparar datos de la tabla
-        yPos += 8;
-        const filas = document.getElementById('cuerpoTabla').querySelectorAll('tr');
+        doc.setFontSize(8);
+        doc.setFont(undefined, 'bold');
+        doc.text('PROYECTO:', margin + 3, yPos + 5);
+        doc.setFont(undefined, 'normal');
+        doc.text(proyecto, margin + 25, yPos + 5);
+        
+        doc.setFont(undefined, 'bold');
+        doc.text('RESPONSABLE TÉCNICO:', margin + 3, yPos + 11);
+        doc.setFont(undefined, 'normal');
+        doc.text(responsable, margin + 45, yPos + 11);
+        
+        doc.setFont(undefined, 'bold');
+        doc.text('COTA INICIAL (BM):', margin + 3, yPos + 17);
+        doc.setFont(undefined, 'normal');
+        doc.text(`${cotaInicial} m`, margin + 38, yPos + 17);
+        
+        doc.setFont(undefined, 'bold');
+        doc.text('FECHA:', pageWidth - margin - 55, yPos + 17);
+        doc.setFont(undefined, 'normal');
+        doc.text(fecha, pageWidth - margin - 42, yPos + 17);
+        
+        yPos += 26;
+        
+        // TABLA DE DATOS CON TODOS LOS ENCABEZADOS
         const tableData = [];
         
         for (let i = 0; i < filas.length; i += 2) {
@@ -974,121 +1163,205 @@
             const vd = f2.querySelector('.vd').value || '-';
             const pv = f1.querySelector('.pv').innerText;
             const dh = f1.querySelector('.dh').innerText;
+            const pendiente = f1.querySelector('.pendiente-val').innerText;
             const cota1 = f1.querySelectorAll('.cota-val')[0].innerText;
             const cota2 = f2.querySelector('.cota-val').innerText;
             
-            tableData.push([estacion, p1Name, p1CoordX, p1CoordY, dist, va, '', pv, dh, cota1]);
-            tableData.push(['', p2Name, p2CoordX, p2CoordY, '', '', vd, '', '', cota2]);
+            tableData.push([estacion, p1Name, p1CoordX, p1CoordY, dist, va, '', pv, dh, pendiente, cota1]);
+            tableData.push(['', p2Name, p2CoordX, p2CoordY, '', '', vd, '', '', '', cota2]);
         }
         
-        // Totales
-        const totalDist = document.getElementById('totalDist').innerText;
         const sumaVA = document.getElementById('sumaVA').innerText;
         const sumaVD = document.getElementById('sumaVD').innerText;
         const sumaDH = document.getElementById('sumaDH').innerText;
+        const pendPromedio = document.getElementById('pendPromedio').innerText;
         
-        tableData.push(['TOTALES', '', '', '', totalDist, sumaVA, sumaVD, '', sumaDH, '']);
+        tableData.push(['TOTALES', '', '', '', totalDist, sumaVA, sumaVD, '', sumaDH, pendPromedio, '']);
         
-        // Dibujar tabla
         doc.autoTable({
             startY: yPos,
-            head: [['Est.', 'Punto', 'X (m)', 'Y (m)', 'Dist.(m)', 'V.Atrás', 'V.Adel.', 'P.Visual', 'ΔH', 'Cota']],
+            head: [[
+                'Est.', 
+                'Punto\nVisado', 
+                'Coord.\nX (m)', 
+                'Coord.\nY (m)', 
+                'Dist.\n(m)', 
+                'V.Atrás\n(+)', 
+                'V.Adel.\n(-)', 
+                'Plano\nVisual', 
+                'ΔH', 
+                'Pend.\n(%)', 
+                'Cota\n(m)'
+            ]],
             body: tableData,
             theme: 'grid',
             styles: { 
-                fontSize: 6,
+                fontSize: 6.5,
                 cellPadding: 1.5,
                 lineColor: [180, 180, 180],
-                lineWidth: 0.1
+                lineWidth: 0.1,
+                halign: 'center',
+                valign: 'middle'
             },
             headStyles: { 
                 fillColor: [45, 45, 45],
                 textColor: [245, 240, 235],
                 fontStyle: 'bold',
-                fontSize: 6,
-                halign: 'center'
+                fontSize: 6.5,
+                halign: 'center',
+                valign: 'middle',
+                cellPadding: 2,
+                minCellHeight: 10
             },
             columnStyles: {
-                0: { cellWidth: 12, halign: 'center', fontStyle: 'bold' },
-                1: { cellWidth: 22, halign: 'left' },
-                2: { cellWidth: 18, halign: 'center', fontSize: 5.5 },
-                3: { cellWidth: 18, halign: 'center', fontSize: 5.5 },
-                4: { cellWidth: 16, halign: 'center' },
-                5: { cellWidth: 16, halign: 'center' },
-                6: { cellWidth: 16, halign: 'center' },
-                7: { cellWidth: 18, halign: 'center' },
-                8: { cellWidth: 15, halign: 'center' },
-                9: { cellWidth: 18, halign: 'center' }
+                0: { cellWidth: 11, fontStyle: 'bold' },
+                1: { cellWidth: 18, halign: 'left', fontSize: 6 },
+                2: { cellWidth: 15, fontSize: 6 },
+                3: { cellWidth: 15, fontSize: 6 },
+                4: { cellWidth: 13 },
+                5: { cellWidth: 14 },
+                6: { cellWidth: 14 },
+                7: { cellWidth: 15 },
+                8: { cellWidth: 12 },
+                9: { cellWidth: 13, fontStyle: 'bold' },
+                10: { cellWidth: 15 }
             },
             didParseCell: function(data) {
-                // Resaltar fila de totales
                 if (data.row.index === tableData.length - 1) {
                     data.cell.styles.fillColor = [45, 45, 45];
                     data.cell.styles.textColor = [255, 255, 255];
                     data.cell.styles.fontStyle = 'bold';
                 }
-                // Estaciones
                 if (data.column.index === 0 && data.cell.text[0] && data.cell.text[0].startsWith('E')) {
                     data.cell.styles.fillColor = [232, 223, 214];
                 }
-                // Calculados
-                if ([7, 8, 9].includes(data.column.index) && data.row.index < tableData.length - 1) {
+                if ([7, 8, 9, 10].includes(data.column.index) && data.row.index < tableData.length - 1) {
                     data.cell.styles.fillColor = [245, 240, 235];
                 }
             },
             margin: { left: margin, right: margin }
         });
         
-        // Resultados compactos
-        const finalY = doc.lastAutoTable.finalY + 5;
+        yPos = doc.lastAutoTable.finalY + 6;
         
+        // RESUMEN
         const resDist = document.getElementById('resDist').innerText;
         const resDesn = document.getElementById('resDesn').innerText;
         const resCotaF = document.getElementById('resCotaF').innerText;
         const resError = document.getElementById('resError').innerText;
         
-        doc.setFillColor(245, 240, 235);
-        doc.rect(margin, finalY, 65, 15, 'F');
-        doc.rect(margin + 68, finalY, 65, 15, 'F');
-        doc.rect(margin + 136, finalY, 65, 15, 'F');
-        doc.rect(margin + 204, finalY, 65, 15, 'F');
-        
-        doc.setFontSize(7);
+        doc.setFontSize(9);
         doc.setFont(undefined, 'bold');
-        doc.text('DISTANCIA TOTAL', margin + 32.5, finalY + 4, { align: 'center' });
-        doc.text('DESNIVEL ACUMULADO', margin + 100.5, finalY + 4, { align: 'center' });
-        doc.text('COTA FINAL', margin + 168.5, finalY + 4, { align: 'center' });
-        doc.text('ERROR DE CIERRE', margin + 236.5, finalY + 4, { align: 'center' });
+        doc.text('RESUMEN DE RESULTADOS', pageWidth / 2, yPos, { align: 'center' });
+        yPos += 5;
         
+        const boxWidth = (usableWidth - 9) / 4;
+        const boxHeight = 14;
+        
+        doc.setFillColor(245, 240, 235);
+        doc.rect(margin, yPos, boxWidth, boxHeight, 'FD');
+        doc.setFontSize(6.5);
+        doc.setFont(undefined, 'bold');
+        doc.text('DISTANCIA TOTAL', margin + boxWidth / 2, yPos + 5, { align: 'center' });
         doc.setFontSize(10);
-        doc.text(`${resDist} m`, margin + 32.5, finalY + 11, { align: 'center' });
-        doc.text(`${resDesn} m`, margin + 100.5, finalY + 11, { align: 'center' });
-        doc.text(`${resCotaF} m`, margin + 168.5, finalY + 11, { align: 'center' });
-        doc.text(`${resError} m`, margin + 236.5, finalY + 11, { align: 'center' });
+        doc.text(resDist, margin + boxWidth / 2, yPos + 10.5, { align: 'center' });
         
-        // Gráfico si existe
-        const chartCanvas = document.getElementById('perfilChart');
-        if (chartCanvas && chart) {
-            const chartY = finalY + 18;
-            const chartHeight = pageHeight - chartY - margin - 3;
-            const chartWidth = pageWidth - (2 * margin);
+        doc.setFillColor(245, 240, 235);
+        doc.rect(margin + boxWidth + 3, yPos, boxWidth, boxHeight, 'FD');
+        doc.setFontSize(6.5);
+        doc.setFont(undefined, 'bold');
+        doc.text('DESNIVEL ACUM.', margin + boxWidth + 3 + boxWidth / 2, yPos + 5, { align: 'center' });
+        doc.setFontSize(10);
+        doc.text(resDesn, margin + boxWidth + 3 + boxWidth / 2, yPos + 10.5, { align: 'center' });
+        
+        doc.setFillColor(245, 240, 235);
+        doc.rect(margin + 2 * boxWidth + 6, yPos, boxWidth, boxHeight, 'FD');
+        doc.setFontSize(6.5);
+        doc.setFont(undefined, 'bold');
+        doc.text('COTA FINAL', margin + 2 * boxWidth + 6 + boxWidth / 2, yPos + 5, { align: 'center' });
+        doc.setFontSize(10);
+        doc.text(resCotaF, margin + 2 * boxWidth + 6 + boxWidth / 2, yPos + 10.5, { align: 'center' });
+        
+        doc.setFillColor(245, 240, 235);
+        doc.rect(margin + 3 * boxWidth + 9, yPos, boxWidth, boxHeight, 'FD');
+        doc.setFontSize(6.5);
+        doc.setFont(undefined, 'bold');
+        doc.text('ERROR DE CIERRE', margin + 3 * boxWidth + 9 + boxWidth / 2, yPos + 5, { align: 'center' });
+        doc.setFontSize(10);
+        doc.text(resError, margin + 3 * boxWidth + 9 + boxWidth / 2, yPos + 10.5, { align: 'center' });
+        
+        yPos += boxHeight + 6;
+        
+        // GRÁFICOS EN ALTA CALIDAD CON PROPORCIONES CORRECTAS
+        const remainingSpace = pageHeight - yPos - margin - 10;
+        
+        if (perfilChart && remainingSpace > 35) {
+            doc.setFontSize(9);
+            doc.setFont(undefined, 'bold');
+            doc.text('PERFIL LONGITUDINAL DEL TERRENO', pageWidth / 2, yPos, { align: 'center' });
+            yPos += 5;
             
-            const chartImg = chartCanvas.toDataURL('image/png');
-            doc.addImage(chartImg, 'PNG', margin, chartY, chartWidth, chartHeight);
+            const chartCanvas = document.getElementById('perfilChart');
+            const chartAspectRatio = 2.5;
+            const chartWidth = usableWidth;
+            const chartHeight = chartWidth / chartAspectRatio;
+            
+            const availableHeight = (remainingSpace - 12) / 2;
+            const finalChartHeight = Math.min(chartHeight, availableHeight);
+            
+            try {
+                const chartImg = chartCanvas.toDataURL('image/png', 1.0);
+                doc.addImage(chartImg, 'PNG', margin, yPos, usableWidth, finalChartHeight, undefined, 'FAST');
+                yPos += finalChartHeight + 6;
+            } catch (error) {
+                console.error('Error al exportar gráfico de perfil:', error);
+            }
+            
+            if (pageHeight - yPos - margin > 30 && pendientesChart) {
+                doc.setFontSize(9);
+                doc.setFont(undefined, 'bold');
+                doc.text('ANÁLISIS DE PENDIENTES POR ESTACIÓN', pageWidth / 2, yPos, { align: 'center' });
+                yPos += 5;
+                
+                const pendCanvas = document.getElementById('pendientesChart');
+                const pendAspectRatio = 2.5;
+                const pendWidth = usableWidth;
+                const pendHeight = pendWidth / pendAspectRatio;
+                
+                const availablePendHeight = pageHeight - yPos - margin - 8;
+                const finalPendHeight = Math.min(pendHeight, availablePendHeight);
+                
+                try {
+                    const pendImg = pendCanvas.toDataURL('image/png', 1.0);
+                    doc.addImage(pendImg, 'PNG', margin, yPos, usableWidth, finalPendHeight, undefined, 'FAST');
+                } catch (error) {
+                    console.error('Error al exportar gráfico de pendientes:', error);
+                }
+            }
         }
         
-        doc.save('Nivelacion_JohnLeonardo.pdf');
+        // Pie de página
+        doc.setFontSize(7);
+        doc.setFont(undefined, 'italic');
+        doc.setTextColor(107, 107, 107);
+        doc.text(
+            `Documento generado automáticamente - ${new Date().toLocaleString('es-ES')}`,
+            pageWidth / 2,
+            pageHeight - 7,
+            { align: 'center' }
+        );
+        
+        doc.save('Nivelacion_Topografica_JohnLeonardo.pdf');
     }
 
-    // Re-renderizar gráfico al cambiar tamaño de ventana
     let resizeTimeout;
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(() => {
-            if (chart) {
+            if (perfilChart || pendientesChart) {
                 const filas = document.getElementById('cuerpoTabla').querySelectorAll('tr');
                 if (filas.length > 0) {
-                    calcular(); // Recalcular para ajustar el gráfico
+                    calcular();
                 }
             }
         }, 250);
