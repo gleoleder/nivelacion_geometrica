@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Nivelación Topográfica - Ingeniería</title>
+    
+    <!-- Librerías externas -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0/dist/chartjs-plugin-annotation.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    
+    <!-- Fuentes -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Estilos -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="container" id="printable-area">
+    <!-- HEADER -->
+    <div class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <h1>Sistema de Nivelación Topográfica</h1>
+                <p class="subtitle">Perfil Longitudinal — Nivelación Geométrica Simple y Compuesta</p>
+            </div>
+            <div class="elaborado-por">
+                <span class="label">Elaborado por</span>
+                <span class="nombre">JOHN LEONARDO CABRERA ESPINDOLA</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="body-content">
+        <!-- 01: DATOS DEL PROYECTO -->
+        <div class="section-title">
+            <div class="icon">01</div>
+            <h2>Datos del Proyecto</h2>
+        </div>
+
+        <div class="project-section">
+            <div class="input-group">
+                <label>Proyecto</label>
+                <input type="text" id="proyecto" placeholder="Ej: Drenaje Casco Viejo Oruro">
+            </div>
+            <div class="input-group">
+                <label>Responsable Técnico</label>
+                <input type="text" id="responsable" placeholder="Nombre del responsable">
+            </div>
+            <div class="input-group">
+                <label>Cota Inicial (BM) [m]</label>
+                <input type="number" id="cotaInicial" step="0.001" placeholder="Ej: 3700.500">
+            </div>
+            <div class="input-group">
+                <label>Fecha</label>
+                <div class="date-display" id="current-date"></div>
+            </div>
+        </div>
+
+        <!-- CONFIGURACIÓN -->
+        <div class="config-row no-print">
+            <div class="input-group" style="max-width:200px;">
+                <label>Precisión del Nivel</label>
+                <select id="precisionNivel">
+                    <option value="0.012">Alta — ±12mm√K</option>
+                    <option value="0.024" selected>Media — ±24mm√K</option>
+                    <option value="0.050">Baja — ±50mm√K</option>
+                </select>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="autoDistCheck">
+                <label for="autoDistCheck">Calcular distancia automática desde coordenadas</label>
+            </div>
+        </div>
+
+        <!-- 02: LIBRETA DE CAMPO -->
+        <div class="section-title">
+            <div class="icon">02</div>
+            <h2>Libreta de Campo</h2>
+        </div>
+
+        <div class="table-wrapper">
+            <table id="tablaNivel">
+                <thead>
+                    <tr>
+                        <th>Est.</th>
+                        <th>Punto Visado</th>
+                        <th>Coord. X (m)</th>
+                        <th>Coord. Y (m)</th>
+                        <th>Dist. (m)</th>
+                        <th>V. Atrás (+)</th>
+                        <th>V. Adelante (−)</th>
+                        <th>Plano Visual</th>
+                        <th>ΔH (m)</th>
+                        <th>Pendiente (%)</th>
+                        <th>Cota (m)</th>
+                        <th class="no-print">Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpoTabla">
+                    <tr id="empty-row">
+                        <td colspan="12">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📐</div>
+                                <div class="empty-state-text">No hay estaciones registradas</div>
+                                <div class="empty-state-hint">Presione "Nueva Estación" para comenzar</div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+                <tfoot id="tablaFooter" style="display: none;">
+                    <tr class="suma-row">
+                        <td colspan="2" style="text-align: left; padding-left: 15px; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px;">Σ Totales</td>
+                        <td colspan="2"></td>
+                        <td id="totalDist" class="highlight-val">0.00</td>
+                        <td id="sumaVA">0.000</td>
+                        <td id="sumaVD">0.000</td>
+                        <td></td>
+                        <td id="sumaDH" class="highlight-val">0.000</td>
+                        <td id="pendPromedio" class="highlight-val">0.00%</td>
+                        <td></td>
+                        <td class="no-print"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- BOTONES -->
+        <div class="btn-toolbar no-print">
+            <button class="btn btn-add" onclick="agregarEstacion()">＋ Nueva Estación</button>
+            <button class="btn btn-calc" onclick="calcular()">⚙ Calcular</button>
+            <button class="btn btn-pdf" onclick="exportarPDF()">↓ Exportar PDF</button>
+            <button class="btn btn-clear" onclick="limpiarTabla()">✕ Limpiar Todo</button>
+        </div>
+
+        <!-- RESULTADOS -->
+        <div id="results-container" class="results-grid" style="display: none;"></div>
+
+        <!-- TOLERANCIA -->
+        <div id="tolerance-section" class="tolerance-section" style="display: none;"></div>
+
+        <!-- 03: GRÁFICOS -->
+        <div class="section-title" id="charts-title" style="display:none;">
+            <div class="icon">03</div>
+            <h2>Representación Gráfica</h2>
+        </div>
+
+        <div class="charts-wrapper" id="charts-wrapper" style="display: none;">
+            <div class="chart-container">
+                <canvas id="perfilChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="pendientesChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts propios -->
+<script src="script.js"></script>
+<script src="pdf-export.js"></script>
+
+</body>
+</html>
