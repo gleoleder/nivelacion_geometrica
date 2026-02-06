@@ -223,7 +223,35 @@ function calcular() {
     generarGraficos(pData, pC, labelsArr, estAnnotations, pendientePromedio);
 }
 
-// ===== GRÁFICOS (ORIGINAL) =====
+// ===== GRÁFICOS CON ZOOM/PAN =====
+
+// Zoom/Pan config reutilizable
+const zoomPanConfig = {
+    zoom: {
+        wheel: { enabled: true, modifierKey: null },
+        pinch: { enabled: true },
+        mode: 'xy',
+        scaleMode: 'xy',
+    },
+    pan: {
+        enabled: true,
+        mode: 'xy',
+        modifierKey: null,
+    },
+    limits: {
+        x: { minRange: 1 },
+        y: { minRange: 0.5 }
+    }
+};
+
+function resetZoomPerfil() {
+    if (perfilChart) perfilChart.resetZoom();
+}
+
+function resetZoomPendientes() {
+    if (pendientesChart) pendientesChart.resetZoom();
+}
+
 function generarGraficos(pData, pC, labels, estAnnotations, pendientePromedio) {
     document.getElementById('charts-wrapper').style.display = 'grid';
     document.getElementById('charts-title').style.display = 'flex';
@@ -252,14 +280,10 @@ function generarGraficos(pData, pC, labels, estAnnotations, pendientePromedio) {
         };
     });
 
-    // Etiquetas de puntos con alineación inteligente
+    // Etiquetas: alternar yAdjust si hay muchos puntos para no sobreponerlas
+    const manyPoints = pData.length > 6;
     pData.forEach((punto, i) => {
-        let xAdjustValue = 0;
-        if (i === 0) {
-            xAdjustValue = 0;
-        } else if (i === pData.length - 1) {
-            xAdjustValue = 0;
-        }
+        const yOff = manyPoints ? (i % 2 === 0 ? -38 : -65) : -35;
 
         annotations['punto_label_' + i] = {
             type: 'label',
@@ -272,8 +296,8 @@ function generarGraficos(pData, pC, labels, estAnnotations, pendientePromedio) {
             content: [punto.label, `${punto.y.toFixed(2)} m`],
             font: { size: 9, weight: 'bold' },
             padding: 4,
-            yAdjust: -35,
-            xAdjust: xAdjustValue,
+            yAdjust: yOff,
+            xAdjust: 0,
             callout: { enabled: true, side: 5, margin: 0 }
         };
     });
@@ -307,7 +331,8 @@ function generarGraficos(pData, pC, labels, estAnnotations, pendientePromedio) {
                     font: { size: 14, weight: 'bold' },
                     color: '#2d2d2d',
                     padding: 10
-                }
+                },
+                zoom: zoomPanConfig
             },
             scales: { 
                 x: { 
@@ -325,7 +350,7 @@ function generarGraficos(pData, pC, labels, estAnnotations, pendientePromedio) {
         }
     });
 
-    // === GRÁFICO DE PENDIENTES (ORIGINAL) ===
+    // === GRÁFICO DE PENDIENTES ===
     const ctx2 = document.getElementById('pendientesChart').getContext('2d');
     if (pendientesChart) pendientesChart.destroy();
     
@@ -374,7 +399,8 @@ function generarGraficos(pData, pC, labels, estAnnotations, pendientePromedio) {
                             }
                         }
                     }
-                }
+                },
+                zoom: zoomPanConfig
             },
             scales: {
                 y: { 
